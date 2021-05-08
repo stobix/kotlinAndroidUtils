@@ -6,6 +6,12 @@ import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KProperty
 
+/**
+ * A delegate that executes [f] once, sending its return value to the [LiveData] backing field
+ * @param f the suspend function to call
+ * @param default the default value until [f] has run
+ * @param store the [MutableLiveData] backend. (Automagically created.)
+ */
 class LazyResource<A>(
     val f: suspend () -> A,
     private val default:A? = null,
@@ -23,7 +29,7 @@ class LazyResource<A>(
             runBlocking {
                 try {
                     store.postValue(f())
-                    Log.d("LazyResource","Got ${property.name}")
+                    // Log.d("LazyResource","Got ${property.name}")
                 } catch (err: Throwable) {
                     gotData = false
                     Log.e("LazyResource","Error when getting ${property.name}: ${err.stackTraceToString()}")
@@ -34,6 +40,17 @@ class LazyResource<A>(
     }
 }
 
+/**
+ * Creates a [LazyResource] delegate with a backing [LiveData],
+ *  executing [f] on the first access, asynchronously returning its value to the [LiveData]
+ *  @param f A suspend function called exactly once.
+ */
 fun <A>lazyResource(f: suspend () -> A) = LazyResource(f)
 
+/**
+ * Creates a [LazyResource] delegate with a backing [LiveData],
+ *  executing [f] on the first access, asynchronously returning its value to the [LiveData]
+ *  @param f A suspend function called exactly once.
+ *  @param default The default value for the [LiveData] until [f] has been successfully executed.
+ */
 fun <A>lazyResource(default:A, f: suspend () -> A) = LazyResource(f,default)
